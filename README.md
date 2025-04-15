@@ -33,6 +33,7 @@ Este projeto foi desenvolvido para facilitar o processo de upgrade de uma versã
 * **Versão antiga** : Versão atual instalada do PostgreSQL.
 * **Versão nova** : Versão para a qual você deseja atualizar o PostgreSQL.
 * **Diretório atual** : Diretório onde o PostgreSQL atual está armazenando os dados.
+* **Diretório novo** : Diretório onde o PostgreSQL novo irá armazenar os dados.
 
 ## Atenção
 
