@@ -102,7 +102,7 @@ echo -e "\n${green}Configuração novo ambiente PostgreSQL concluída com sucess
 
 #Ajustando configurações no antigo postgreSQL 
 echo "${green}Iniciando configurações do PostgreSQL $oldpost ${reset}"
-/usr/lib/postgresql/$oldpost/bin/psql -d db1 -U PACIENTE -c "ALTER ROLE postgres WITH SUPERUSER;" &> /dev/null
+/usr/lib/postgresql/$oldpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH SUPERUSER;" &> /dev/null
 
 ##Ajustando configurações no novo postgreSQL 
 echo "${green}Iniciando configurações do PostgreSQL $newpost ${reset}"
@@ -192,8 +192,8 @@ echo -e "\n Executar: ${red} /usr/lib/postgresql/$newpost/bin/vacuumdb -U postgr
 
 #Opcional após upgrade
 cd /$newdir/postgres$newpost/data
-/usr/lib/postgresql/$newpost/bin/psql -d db1 -U PACIENTE -f update_extensions.sql &> /dev/null
-/usr/lib/postgresql/$newpost/bin/psql -d db1 -U PACIENTE -c "ALTER ROLE postgres WITH NOSUPERUSER;" &> /dev/null
+/usr/lib/postgresql/$newpost/bin/psql -d postgres -U admin -f update_extensions.sql &> /dev/null
+/usr/lib/postgresql/$newpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH NOSUPERUSER;" &> /dev/null
 echo -e " \n \n ${green}Após validações rodar ./delete_old_cluster.sh ${reset}\n "
 
 exit
