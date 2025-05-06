@@ -1,49 +1,50 @@
 # Projeto de Atualização PostgreSQL (pg_upgrade)
 
-Este projeto foi desenvolvido para facilitar o processo de upgrade de uma versão antiga do PostgreSQL para uma versão mais nova. O script realiza uma série de operações, incluindo instalação de novas versões, cópia de diretórios de dados e ajustes nas configurações do PostgreSQL.
+Este projeto automatiza a migração de uma versão antiga do PostgreSQL para uma versão mais nova, cuidando de instalação, migração de dados e ajustes de configuração.
 
 ## Funcionalidades
 
-- Instalação de uma nova versão do PostgreSQL com base na versão informada pelo usuário.
-- Criação de diretórios e ajuste de permissões para o novo ambiente.
-- Configuração automática de parâmetros do `postgresql.conf` para otimizar o desempenho.
-- Processo automatizado de `pg_upgrade` para migrar dados do PostgreSQL antigo para o novo.
-- Reinicialização de serviços e ajuste das portas de comunicação entre as versões antiga e nova.
-- Execução de `VACUUM` e outras manutenções pós-upgrade.
+- **Instalação** automática da versão nova informada pelo usuário.  
+- **Criação** de diretórios e ajuste de permissões para o novo cluster.  
+- **Otimizações** pré-configuradas no `postgresql.conf` (buffers, cache, timeouts, logs, timezone).  
+- **Migração** de dados via `pg_upgrade`, parando/ativando clusters conforme necessário.  
+- **Ajuste** de portas para coexistência das versões antiga e nova.  
+- **Vacuum** e outras manutenções pós-upgrade.
 
 ## Requisitos
 
-- Sistema operacional Linux com suporte ao PostgreSQL.
-- Acesso administrativo (`sudo`) ao sistema para instalar pacotes e modificar permissões de diretórios.
-- O script foi testado no ambiente com suporte ao gerenciador de pacotes `apt` (Debian/Ubuntu).
-- PostgreSQL a partir da versão 12 e instalado via repositório.
+- Linux (Debian/Ubuntu) com gerenciador de pacotes `apt`.  
+- Acesso administrativo (`sudo`).  
+- PostgreSQL ≥ 12 disponível nos repositórios oficiais.
 
 ## Como usar
 
-1. Clone o repositório ou copie o script para seu ambiente.
-2. Certifique-se de ter as permissões necessárias para executar comandos como `sudo`.
-3. Execute o script:
-   ```bash
-   ./upgrade.sh
-   ```
-4. Siga as instruções na tela, informando as versões e diretórios conforme solicitado.
+```bash
+git clone https://github.com/omatheusgit/pg_upgrade.git
+cd pg_upgrade
+chmod +x upgrade.sh
+./upgrade.sh
+```
 
-## Parâmetros
+> **Dica:** Siga as instruções na tela, informando as versões e diretórios conforme solicitado. Leia atentamente os processos que estão sendo executados e exibidos em tela.
 
-* **Versão antiga** : Versão atual instalada do PostgreSQL.
-* **Versão nova** : Versão para a qual você deseja atualizar o PostgreSQL.
-* **Diretório atual** : Diretório onde o PostgreSQL atual está armazenando os dados.
-* **Diretório novo** : Diretório onde o PostgreSQL novo irá armazenar os dados.
+   
+## Parâmetros solicitados
+
+- **Versão antiga**: versão atualmente em uso do PostgreSQL.  
+- **Versão nova**: versão desejada para upgrade.  
+- **Diretório atual**: local dos dados da versão antiga (data dir).  
+- **Diretório novo**: pasta/destino da nova versão do PostgresSQL.
 
 ## Atenção
 
-* Este script realiza alterações diretas em arquivos de configuração do PostgreSQL e manipula permissões de diretórios. Verifique cuidadosamente antes de executar em ambientes de produção.
-* É recomendado realizar um backup completo do ambiente antes de iniciar o processo de upgrade.
+- Faça **backup completo** antes de iniciar.  
+- Teste em **ambiente controlado**; não execute direto em produção.  
+- Revise os parâmetros do `postgresql.conf` caso tenha necessidades específicas de carga de trabalho.
 
 ## Autor
 
-* Desenvolvido por Matheus Rafael.
+* Desenvolvido por **Matheus Rafael**. <img src="https://media.giphy.com/media/mKHdmq1QR9Dvq/giphy.gif" alt="Batman GIF" width="60" height="40" />
 
-## Licença
 
-* Uso restrito para fins de estudo e adaptação em ambientes controlados. Não é recomendada a utilização em ambientes de produção sem antes realizar os devidos testes e validações.
+
