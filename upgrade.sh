@@ -76,6 +76,7 @@ fi
 
 # Etapa 3: Criar pastas e modificar parâmetros
 echo "${green}Criando diretorio postgres$newpost ${reset}"
+
 # Criar diretórios
 mkdir /$newdir/postgres$newpost &> /dev/null
 mkdir /$newdir/postgres$newpost/data &> /dev/null
@@ -107,32 +108,29 @@ echo "${green}Iniciando configurações do PostgreSQL $oldpost ${reset}"
 ##Ajustando configurações no novo postgreSQL 
 echo "${green}Iniciando configurações do PostgreSQL $newpost ${reset}"
 cd /etc/postgresql/$newpost/main/
+
+#Backup do arquivo original pg_hba.conf
 cp pg_hba.conf pg_hba.conf.default &> /dev/null
+
+#Copiando pg_hba.conf antigo para versão nova (manter liberado os mesmos hosts)
 cp /etc/postgresql/$oldpost/main/pg_hba.conf /etc/postgresql/$newpost/main/ &> /dev/null
+
+#Backup do arquivo original postgresql.conf
 cp postgresql.conf postgresql.conf.default &> /dev/null
+
+#Ajuste dos parametros essenciais do postgresql.conf (pg_tune)
 sed -i -e "s/#idle_in_transaction_session_timeout = 0/idle_in_transaction_session_timeout = 20000/" postgresql.conf
 sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" postgresql.conf
-sed -i -e "s/#backslash_quote = safe_encoding/backslash_quote = on/" postgresql.conf
-sed -i -e "s/#standard_conforming_strings = on/standard_conforming_strings = off/" postgresql.conf
 sed -i -e "s/#deadlock_timeout = 1s/deadlock_timeout = 5s/" postgresql.conf
 sed -i -e "s/#max_locks_per_transaction = 64/max_locks_per_transaction = 128/" postgresql.conf
-##essas duas abaixo - se der problema no .conf
-sed -i -e "s/shared_buffers = 128MB/shared_buffers = $(( SHABM ))MB/" postgresql.conf            	
-sed -i -e "s/#effective_cache_size = 4GB/effective_cache_size = $(( ECSM ))MB/" postgresql.conf
-sed -i -e "s/max_connections = 100/max_connections = 300/" postgresql.conf
+sed -i -e "s/shared_buffers = 128MB/shared_buffers = $(( SHABM ))MB/" postgresql.conf # Memoria compartilhada (≈25% RAM)            	
+sed -i -e "s/#effective_cache_size = 4GB/effective_cache_size = $(( ECSM ))MB/" postgresql.conf # # Cache efetivo (≈75% RAM)
+sed -i -e "s/max_connections = 100/max_connections = 600/" postgresql.conf
 sed -i -e "s/#synchronous_commit = on/synchronous_commit = off/" postgresql.conf
 sed -i -e "s/#checkpoint_segments = 3/checkpoint_segments = 10/" postgresql.conf
 sed -i -e "s/#maintenance_work_mem = 64MB/maintenance_work_mem = 512MB/" postgresql.conf
-sed -i -e "s/#bytea_output = 'hex'/bytea_output = 'escape'/" postgresql.conf
-sed -i -e "s/#log_destination = 'stderr'/log_destination = 'stderr'/" postgresql.conf
-sed -i -e "s/#logging_collector = off/logging_collector = on/" postgresql.conf
-sed -i -e "s/#log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'/log_filename = 'postgresql-%a.log'/" postgresql.conf
-sed -i -e "s|log_timezone = 'Etc/UTC'|log_timezone = 'America/Sao_Paulo'|" postgresql.conf
-sed -i -e "s|timezone = 'Etc/UTC'|timezone = 'America/Sao_Paulo'|" postgresql.conf
 sed -i -e "s|data_directory = '/var/lib/postgresql/$newpost/main'|data_directory = '/$newdir/postgres$newpost/data/'|" postgresql.conf
 sed -i -e "s|port = 5433 |port = 50432|" postgresql.conf
-sed -i -e "s/#track_activity_query_size = 1024/track_activity_query_size = 5000/" postgresql.conf
-sed -i -e "s/escape_string_warning = off/escape_string_warning = on/" postgresql.conf
 
 set PGCLIENTENCODING=utf-8
 touch /$newdir/postgres$newpost/data/pg_upgrade_server.log &> /dev/null
