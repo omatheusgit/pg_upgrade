@@ -38,12 +38,12 @@ echo -e "\n ${green}Versão antiga: $oldpost \n \n Versão nova: $newpost \n \n 
 read -p "${blue}Deseja continuar com a configuração? (Y/n): ${reset}" response
 
 if [[ "$response" =~ ^[Nn] ]]; then
-    echo "${green}Operação cancelada.${reset}"
+    echo "${green}[CANCELADO] Operação cancelada.${reset}"
     exit 1
 fi
 
 # Etapa 2: Atualizar repositórios e instalar PostgreSQL
-echo -e "\n ${green}Instalando e configurando nova versão do PostgreSQL${reset}"
+echo -e "\n ${green}[PROCESSO EM ANDAMENTO] Instalando e configurando nova versão do PostgreSQL${reset}"
 # Adiciona a chave GPG
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg &> /dev/null
 
@@ -57,25 +57,25 @@ sudo apt update &> /dev/null
 sudo apt install postgresql-$newpost postgresql-client-$newpost -y &> /dev/null
 
 #Corrigir a falha de novos linux não subir o cluster novo
-echo "${green}Verificando cluster da nova versão $newpost ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Verificando cluster da nova versão $newpost ${reset}"
 
 if pg_lsclusters | grep -q "$newpost.*main.*online"; then
-    echo "${green}Cluster $newpost já está ativo.${reset}"
+    echo "${green}[PROCESSO EM ANDAMENTO] Cluster $newpost já está ativo.${reset}"
 else
-    echo "${red}Cluster $newpost não está ativo. Tentando ativar...${reset}"
+    echo "${red}[PROCESSO EM ANDAMENTO] Cluster $newpost não está ativo. Tentando ativar...${reset}"
 
     pg_createcluster $newpost main --start
     sleep 10
     if pg_lsclusters | grep -q "$newpost.*main.*online"; then
-        echo "${green}Cluster $newpost iniciado com sucesso.${reset}"
+        echo "${green}[PROCESSO EM ANDAMENTO] Cluster $newpost iniciado com sucesso.${reset}"
     else
-        echo "${red}Falha ao iniciar o cluster $newpost. Saindo do script.${reset}"
+        echo "${red}[PROCESSO EM ANDAMENTO] Falha ao iniciar o cluster $newpost. Saindo do script.${reset}"
         exit 1
     fi
 fi
 
 # Etapa 3: Criar pastas e modificar parâmetros
-echo "${green}Criando diretorio postgres$newpost ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Criando diretorio postgres$newpost ${reset}"
 
 # Criar diretórios
 mkdir /$newdir/postgres$newpost &> /dev/null
@@ -99,14 +99,15 @@ cd /$newdir
 # Ajustar permissões
 chmod 700 postgres$newpost -Rf &> /dev/null
 
-echo -e "\n${green}Configuração novo ambiente PostgreSQL concluída com sucesso! ${reset}"
+echo -e "\n${green}[PROCESSO EM ANDAMENTO] Configuração novo ambiente PostgreSQL concluída com sucesso! ${reset}"
 
-#Ajustando configurações no antigo postgreSQL 
-echo "${green}Iniciando configurações do PostgreSQL $oldpost ${reset}"
-/usr/lib/postgresql/$oldpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH SUPERUSER;" &> /dev/null
+#Ajustando configurações no antigo postgreSQL
+#Necessário o usuário postgres ser SUPERUSER e com permissões de login (retirado ao final do processo por questões Security)
+echo "${green}[PROCESSO EM ANDAMENTO] Iniciando configurações do PostgreSQL $oldpost ${reset}"
+/usr/lib/postgresql/$oldpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH SUPERUSER LOGIN;" &> /dev/null
 
 ##Ajustando configurações no novo postgreSQL 
-echo "${green}Iniciando configurações do PostgreSQL $newpost ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Iniciando configurações do PostgreSQL $newpost ${reset}"
 cd /etc/postgresql/$newpost/main/
 
 #Backup do arquivo original pg_hba.conf
@@ -143,14 +144,14 @@ chmod 777 /$newdir/postgres$newpost/data/pg_upgrade_server.log &> /dev/null
 /etc/init.d/postgresql restart &> /dev/null
 
 #Copiando os arquivos
-echo "${green}Copiando arquivos de configuração PostgreSQL $oldpost ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Copiando arquivos de configuração PostgreSQL $oldpost ${reset}"
 cp -Rf /etc/postgresql/$oldpost/main/postgresql.conf $currentDir/ &> /dev/null
 cp -r /etc/postgresql/$oldpost/main/conf.d $currentDir/ &> /dev/null
 cd $currentDir/
 chown -R postgres:postgres postgresql.conf &> /dev/null
 chown -R postgres:postgres conf.d &> /dev/null
 
-echo "${green}Copiando arquivos de configuração PostgreSQL $newpost ${reset}" 
+echo "${green}[PROCESSO EM ANDAMENTO] Copiando arquivos de configuração PostgreSQL $newpost ${reset}" 
 cp /etc/postgresql/$newpost/main/postgresql.conf /$newdir/postgres$newpost/data/ &> /dev/null
 cp -r /etc/postgresql/$newpost/main/conf.d /$newdir/postgres$newpost/data/ &> /dev/null
 cd /$newdir/postgres$newpost/data/ &> /dev/null
@@ -163,12 +164,12 @@ sudo -u postgres /bin/bash <<EOF
 
 #Parando os clusters  
 
-echo "${green}Parando serviços de clusters ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Parando serviços de clusters ${reset}"
 /usr/lib/postgresql/$oldpost/bin/pg_ctl stop -D "$currentDir" &> /dev/null
 /usr/lib/postgresql/$newpost/bin/pg_ctl stop -D "/$newdir/postgres$newpost/data" &> /dev/null
 
 cd /$newdir/postgres$newpost/data/
-echo "${green} Iniciando processo de upgrade ${reset}"
+echo "${green} [PROCESSO EM ANDAMENTO] Iniciando processo de upgrade ${reset}"
 echo " ${red} #### POR SEGURANÇA, NÃO STOPAR ESSE PROCESSO #### ${reset}"
 /usr/lib/postgresql/$newpost/bin/pg_upgrade -b "/usr/lib/postgresql/$oldpost/bin" -B "/usr/lib/postgresql/$newpost/bin" -d "$currentDir" -D "/$newdir/postgres$newpost/data" -Upostgres #Aparecer na tela o resultado
 EOF
@@ -184,14 +185,16 @@ sed -i -e "s|port = 5432|port = 5433| " postgresql.conf
 
 # Manutenções após finalizar Upgrade
 cd /$newdir/postgres$newpost/data/
-echo "${green}Iniciando Vacuum ${reset}"
+echo "${green}[PROCESSO EM ANDAMENTO] Iniciando Vacuum ${reset}"
 #
-echo -e "\n Executar: ${red} /usr/lib/postgresql/$newpost/bin/vacuumdb -U postgres --all --analyse-in-stages ${reset}"
+echo -e "\n [RECOMENDAÇÃO] Executar: ${red} /usr/lib/postgresql/$newpost/bin/vacuumdb -U postgres --all --analyse-in-stages ${reset}"
 
 #Opcional após upgrade
 cd /$newdir/postgres$newpost/data
 /usr/lib/postgresql/$newpost/bin/psql -d postgres -U admin -f update_extensions.sql &> /dev/null
-/usr/lib/postgresql/$newpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH NOSUPERUSER;" &> /dev/null
-echo -e " \n \n ${green}Após validações rodar ./delete_old_cluster.sh ${reset}\n "
+/usr/lib/postgresql/$newpost/bin/psql -d postgres -U admin -c "ALTER ROLE postgres WITH NOSUPERUSER NOLOGIN;" &> /dev/null
+echo -e " \n \n ${green}Após validações, acesse o diretório /$newdir/postgres$newpost/data/ e execute o seguinte script para deletar o cluster da versão anterior: ./delete_old_cluster.sh ${reset}\n "
+echo -e "\n ${red} [CUIDADO] AO EXECUTAR O SCRIPT ./delete_old_cluster.sh, NÃO SERÁ POSSÍVEL REALIZAR UM ROLLBACK PARA A VERSÃO ANTERIOR. ${reset}\n"
+echo -e "\n [INFORMAÇÃO] SE EXECUTAR O ./delete_old_cluster.sh É POSSÍVEL TENTAR RECRIAR UM CLUSTER MANUALMENTE APONTANDO O $currentDir E TENTAR A SUA RECUPERAÇÃO ANTES DE UM DUMP & RESTORE. ${reset}\n"
 
 exit
