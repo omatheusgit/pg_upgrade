@@ -1,0 +1,22 @@
+# Logs
+*.log
+pg_upgrade_server.log
+
+# Temp files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# PostgreSQL artifacts
+delete_old_cluster.sh
+loadable_libraries.txt
